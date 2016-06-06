@@ -1,0 +1,26 @@
+{
+  "name": "appsngen-phonegap-integration",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appsngen/appsngen-phonegap-integration.git"
+  },
+  "keywords": [
+    "appsngen",
+    "phonegap"
+  ],
+  "author": {
+    "name": "appsngen",
+    "email": "developers@appsngen.com",
+    "url": "https://www.appsngen.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/appsngen/appsngen-phonegap-integration/issues"
+  },
+  "homepage": "https://github.com/appsngen/appsngen-phonegap-integration#readme"
+}
