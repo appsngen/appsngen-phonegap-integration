@@ -6,6 +6,7 @@
     var execSync = require('child_process').execSync;
     var path = require('path');
     var archiver = require('archiver');
+    var _ = require('underscore');
 
     var BASE_URL = 'https://build.phonegap.com/api/v1/';
 
@@ -34,6 +35,11 @@
         }
     };
 
+    exports.SUPPORTED_PLATFORMS = [
+        'android',
+        'ios'
+    ];
+
     exports.getKeys = function (accessToken, callback) {
         var url = BASE_URL + 'keys?access_token=' + accessToken;
 
@@ -42,7 +48,11 @@
                 callback(error);
             }
 
-            callback(null, JSON.parse(response.body).keys);
+            if (response.statusCode === 200) {
+                callback(null, JSON.parse(response.body).keys);
+            } else {
+                callback(new Error('Unexpected response from build.phonegap.com.'));
+            }
         });
     };
 
@@ -58,7 +68,10 @@
 
             body = JSON.parse(response.body);
             if (response.statusCode === 201) {
-                callback(null, body.id);
+                callback(null, {
+                    id: body.id,
+                    title: body.title
+                });
             } else {
                 callback(body.error);
             }
@@ -80,14 +93,13 @@
         });
     };
 
-    exports.generatePhonegapZipPackage = function (sourcePath, zipPath) {
+    exports.generatePhonegapZipPackage = function (sourcePath, zipStream) {
         var zipPackage = archiver.create('zip');
-        var output = fs.createWriteStream(zipPath);
 
         zipPackage.on('error', function (error) {
             throw error;
         });
-        zipPackage.pipe(output);
+        zipPackage.pipe(zipStream);
         zipPackage.append(fs.createReadStream(path.join(sourcePath, 'config.xml')), {
             name: 'config.xml'
         });
@@ -95,19 +107,26 @@
         zipPackage.finalize();
     };
 
-    exports.buildSpecificPlatform = function (appId, platform, accessToken, callback) {
-        request.post(BASE_URL + 'apps/' + appId + '/' + platform + '?access_token=' + accessToken,
-            function (error, resp) {
-                if (error) {
-                    callback(error);
-                }
+    // platform parametr can be one from SUPPORTED_PLATFORMS or 'all'
+    exports.buildPhonegapApp = function (appId, platform, accessToken, callback) {
+        var url = BASE_URL + 'apps/' + appId + '/build';
 
-                if (resp.statusCode === 202) {
-                    callback();
-                } else {
-                    callback(new Error('Unable to start build. Unexpected response from build.phonegap.com.'));
-                }
-            });
+        if (platform !== 'all') {
+            url += '/' + platform;
+        }
+        url += '?access_token=' + accessToken;
+
+        request.post(url, function (error, response) {
+            if (error) {
+                callback(error);
+            }
+
+            if (response.statusCode === 202) {
+                callback();
+            } else {
+                callback(new Error('Unable to start build. Unexpected response from build.phonegap.com.'));
+            }
+        });
     };
 
     exports.updatePhonegapApp = function (appId, accessToken, packagePath, callback) {
@@ -121,6 +140,8 @@
 
                 body = JSON.parse(response.body);
                 switch (response.statusCode) {
+                    case 200:
+                        break;
                     case 401:
                         responseError = new Error('Invalid PhoneGap Id');
                         break;
@@ -128,7 +149,7 @@
                         responseError = new Error(body.error);
                         break;
                     default:
-                        responseError = new Error('Unknown error from build.phonegap.com');
+                        responseError = new Error('Unexpected response from build.phonegap.com');
                         break;
                 }
                 callback(responseError);
@@ -142,11 +163,18 @@
             url: BASE_URL + 'apps/' + appId + '/' + platform + '?access_token=' + accessToken,
             followRedirect: false
         }, function (error, response) {
+            var body;
+
             if (error) {
                 callback(error);
             }
 
-            callback(null, JSON.parse(response.body).location);
+            body = JSON.parse(response.body);
+            if (response.statusCode === 302) {
+                callback(null, JSON.parse(response.body).location);
+            } else {
+                callback(new Error(body.error));
+            }
         });
     };
 
@@ -184,7 +212,7 @@
                 if (error) {
                     callback(error);
                 } else {
-                    options.accessToken = response.body.accessToken;
+                    options.token = response.body.accessToken;
                     writeIntegrationFile(options, callback);
                 }
             }
