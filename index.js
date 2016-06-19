@@ -10,8 +10,8 @@
 
     var BASE_URL = 'https://build.phonegap.com/api/v1/';
 
-    var writeIntegrationFile = function (options) {
-        var template, getIntegrationScript;
+    var writeIntegrationFile = function (options, callback) {
+        var getIntegrationScript;
         var scriptTemplatePath = path.join(__dirname, '/templates/integration-template.txt');
         var packageScriptPath = path.join(options.projectPath, '/www/js/integration.js');
         var viewerEndpoint = options.serviceAddress + '/viewer';
@@ -22,14 +22,20 @@
         _.templateSettings = {
             interpolate: /\{\{(.+?)\}\}/g
         };
-        template = fs.readFileSync(scriptTemplatePath, 'utf8');
-        getIntegrationScript = _.template(template);
-        fs.writeFileSync(packageScriptPath, getIntegrationScript({
-            widgetURL: widgetURL,
-            widgetUrn: options.urn,
-            widgetName: widgetName,
-            viewerEndpoint: viewerEndpoint
-        }));
+        fs.readFile(scriptTemplatePath, 'utf8', function (error, template) {
+            if (error) {
+                callback(error);
+                return;
+            }
+
+            getIntegrationScript = _.template(template);
+            fs.writeFile(packageScriptPath, getIntegrationScript({
+                widgetURL: widgetURL,
+                widgetUrn: options.urn,
+                widgetName: widgetName,
+                viewerEndpoint: viewerEndpoint
+            }), callback);
+        });
     };
 
     exports.SUPPORTED_PLATFORMS = [
@@ -211,21 +217,13 @@
                 }
             },
             function (error, response) {
-                var runtimeError;
-
                 if (error) {
                     callback(error);
                     return;
                 }
 
                 options.token = response.body.accessToken;
-                try {
-                    writeIntegrationFile(options);
-                } catch (err) {
-                    runtimeError = err;
-                }
-
-                callback(runtimeError);
+                writeIntegrationFile(options, callback);
             }
         );
     };
