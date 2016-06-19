@@ -10,8 +10,10 @@
 
     var BASE_URL = 'https://build.phonegap.com/api/v1/';
 
-    var writeIntegrationFile = function (options, callback) {
-        var template, compiled;
+    var writeIntegrationFile = function (options) {
+        var template, getIntegrationScript;
+        var scriptTemplatePath = path.join(__dirname, '/templates/integration-template.txt');
+        var packageScriptPath = path.join(options.projectPath, '/www/js/integration.js');
         var viewerEndpoint = options.serviceAddress + '/viewer';
         var widgetURL = options.serviceAddress + '/viewer/content/widgets/' + options.urn +
                         '/index.html?parent=file%3A%2F%2F&token=' + encodeURIComponent(options.token);
@@ -20,19 +22,14 @@
         _.templateSettings = {
             interpolate: /\{\{(.+?)\}\}/g
         };
-        try {
-            template = fs.readFileSync(path.join(__dirname, './templates/integration-template.txt'), 'utf8');
-            compiled = _.template(template);
-            fs.writeFileSync(path.join(options.projectPath, '/www/js/integration.js'), compiled({
-                widgetURL: widgetURL,
-                widgetUrn: options.urn,
-                widgetName: widgetName,
-                viewerEndpoint: viewerEndpoint
-            }));
-            callback();
-        } catch (error) {
-            callback(error);
-        }
+        template = fs.readFileSync(scriptTemplatePath, 'utf8');
+        getIntegrationScript = _.template(template);
+        fs.writeFileSync(packageScriptPath, getIntegrationScript({
+            widgetURL: widgetURL,
+            widgetUrn: options.urn,
+            widgetName: widgetName,
+            viewerEndpoint: viewerEndpoint
+        }));
     };
 
     exports.SUPPORTED_PLATFORMS = [
@@ -46,6 +43,7 @@
         request.get(url, function (error, response) {
             if (error) {
                 callback(error);
+                return;
             }
 
             if (response.statusCode === 200) {
@@ -64,6 +62,7 @@
 
             if (error) {
                 callback(error);
+                return;
             }
 
             body = JSON.parse(response.body);
@@ -119,6 +118,7 @@
         request.post(url, function (error, response) {
             if (error) {
                 callback(error);
+                return;
             }
 
             if (response.statusCode === 202) {
@@ -136,6 +136,7 @@
 
                 if (error) {
                     callback(error);
+                    return;
                 }
 
                 body = JSON.parse(response.body);
@@ -167,6 +168,7 @@
 
             if (error) {
                 callback(error);
+                return;
             }
 
             body = JSON.parse(response.body);
@@ -209,12 +211,21 @@
                 }
             },
             function (error, response) {
+                var runtimeError;
+
                 if (error) {
                     callback(error);
-                } else {
-                    options.token = response.body.accessToken;
-                    writeIntegrationFile(options, callback);
+                    return;
                 }
+
+                options.token = response.body.accessToken;
+                try {
+                    writeIntegrationFile(options);
+                } catch (err) {
+                    runtimeError = err;
+                }
+
+                callback(runtimeError);
             }
         );
     };
