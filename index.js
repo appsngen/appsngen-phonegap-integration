@@ -98,11 +98,15 @@
         });
     };
 
-    exports.generatePhonegapZipPackage = function (sourcePath, zipStream) {
+    exports.generatePhonegapZipPackage = function (sourcePath, zipPath, callback) {
         var zipPackage = archiver.create('zip');
+        var zipStream = fs.createWriteStream(zipPath);
 
+        zipStream.on('close', function () {
+            callback();
+        });
         zipPackage.on('error', function (error) {
-            throw error;
+            callback(error);
         });
         zipPackage.pipe(zipStream);
         zipPackage.append(fs.createReadStream(path.join(sourcePath, 'config.xml')), {
