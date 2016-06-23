@@ -1,0 +1,3 @@
+#This file contains ignores for jshint
+#Path is relative to this file
+#Only forward slashes allowed (example: ../../applications/app/file.js)

@@ -2,8 +2,10 @@
   "name": "appsngen-phonegap-integration",
   "version": "0.0.1",
   "description": "",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "phonegap": "phonegap"
   },
   "repository": {
     "type": "git",
@@ -22,5 +24,13 @@
   "bugs": {
     "url": "https://github.com/appsngen/appsngen-phonegap-integration/issues"
   },
-  "homepage": "https://github.com/appsngen/appsngen-phonegap-integration#readme"
+  "homepage": "https://github.com/appsngen/appsngen-phonegap-integration#readme",
+  "dependencies": {
+    "archiver": "1.0.0",
+    "jscs": "3.0.4",
+    "jshint": "2.9.2",
+    "phonegap": "6.2.6",
+    "request": "2.72.0",
+    "underscore": "1.8.3"
+  }
 }

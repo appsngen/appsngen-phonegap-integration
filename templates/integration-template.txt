@@ -1,0 +1,81 @@
+(function () {
+    var createApplication = function() {
+        var div;
+        var location = window.location;
+        var parent = location.protocol + '//' + location.host;
+        var settings = {
+            width: '100%',
+            height: '100%',
+            frameborder: '0',
+            scrolling: 'auto'
+        };
+        var url = '{{widgetURL}}';
+        url = url.replace(new RegExp('([\\?&]parent=)[^&]+'), '$1' + encodeURIComponent(parent));
+
+        div = document.getElementById('{{widgetUrn}}');
+        div.setAttribute('id', div.getAttribute('id') + appstore.util.guid());
+        appstore.addApplication('{{widgetName}}' + '-' + appstore.util.guid(), div.getAttribute('id'), settings, url);
+    };
+
+    var addScriptLoadHandler = function (script, handler) {
+        var scriptIsLoaded = false;
+        var previousHandler = script.onload;
+
+        // IE8 hack
+        script.onload = script.onerror = script.onreadystatechange = function () {
+            if (!scriptIsLoaded && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete")) {
+                scriptIsLoaded = true;
+
+                if (previousHandler) {
+                    previousHandler.call(script);
+                }
+
+                handler.call(script);
+
+                // IE8 memory leak fix
+                script.onload = script.onerror = script.onreadystatechange = null;
+            }
+        };
+    };
+    var createScript = function(callback) {
+        var scriptId = 'appstore-container-api';
+        var script;
+
+        script = document.getElementById(scriptId);
+        if (script) {
+            if (window.appstore && window.appstore.apiVersion === 'container') {
+                callback();
+            } else {
+                addScriptLoadHandler(script, function () {
+                    callback();
+                });
+            }
+        } else {
+            script = document.createElement('script');
+            script.src = '{{viewerEndpoint}}/content/js/appsngen.container.api.js';
+            script.setAttribute('id', scriptId);
+            addScriptLoadHandler(script, function () {
+                callback();
+            });
+
+            document.body.appendChild(script);
+        }
+    };
+    var container = document.createElement("div");
+    container.id = '{{widgetUrn}}';
+    document.body.appendChild(container);
+
+    if (window.appstore && window.appstore.apiVersion === 'widget') {
+        appstore.ready(createApplication);
+    } else if (window.appstore && window.appstore.apiVersion === 'container'){
+        createApplication();
+    } else {
+        createScript(function () {
+            if (window.appstore) {
+                createApplication();
+            } else if (window.console && window.console.error) {
+                window.console.error('Cannot render widget: appsngen api loading failure');
+            }
+        });
+    }
+}());
