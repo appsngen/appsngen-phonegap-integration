@@ -191,16 +191,22 @@
         });
     };
 
-    // options argument required fields
-    // options = {
+    // options argument required fields:
     //      urn,
-    //      port,
     //      identityToken,
     //      serviceAddress,
     //      projectPath
-    // };
+    // optional fields:
+    //      port
 
     exports.setIntegration = function (options, callback) {
+        var domains = [
+            'file://'
+        ];
+
+        if (options.port) {
+            domains.push('http://localhost:' + options.port);
+        }
         request.post(
             options.serviceAddress + '/rest-services/tokens/access',
             {
@@ -210,10 +216,7 @@
                             options.urn
                         ]
                     },
-                    domains: [
-                        'file://',
-                        'http://localhost:' + options.port
-                    ]
+                    domains: domains
                 },
                 json: true,
                 headers: {
