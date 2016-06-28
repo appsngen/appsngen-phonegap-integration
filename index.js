@@ -3,7 +3,7 @@
 
     var request = require('request');
     var fs = require('fs');
-    var execSync = require('child_process').execSync;
+    var exec = require('child_process').exec;
     var path = require('path');
     var archiver = require('archiver');
     var _ = require('underscore');
@@ -90,11 +90,12 @@
         form.append('file', fs.createReadStream(packagePath));
     };
 
-    exports.createPhonegapPackage = function (projectPath, name) {
-        execSync('npm run phonegap create "' + path.resolve(projectPath) + '" -- --name="' + name +
+    exports.createPhonegapPackage = function (projectPath, name, callback) {
+        exec('npm run phonegap create "' + path.resolve(projectPath) + '" -- --name="' + name +
             '" --template="' + path.join(__dirname, 'templates/phonegap-template') + '"', {
-            stdio: 'inherit',
             cwd: __dirname
+        }, function (error, stdout, stderr) {
+            callback(error, stdout, stderr);
         });
     };
 
