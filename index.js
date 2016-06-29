@@ -64,7 +64,7 @@
         var form, req;
 
         req = request.post(BASE_URL + 'apps?access_token=' + accessToken, function (error, response) {
-            var body;
+            var body, requestError;
 
             if (error) {
                 callback(error);
@@ -78,7 +78,9 @@
                     title: body.title
                 });
             } else {
-                callback(body.error);
+                requestError = new Error(body.error);
+                requestError.code = response.statusCode;
+                callback(requestError);
             }
         });
         form = req.form();
