@@ -60,7 +60,7 @@
         });
     };
 
-    exports.registerPhonegapApp = function (accessToken, packagePath, keys, callback) {
+    exports.registerPhonegapApp = function (name, accessToken, packagePath, keys, callback) {
         var form, req;
 
         req = request.post(BASE_URL + 'apps?access_token=' + accessToken, function (error, response) {
@@ -85,7 +85,7 @@
         });
         form = req.form();
         form.append('data', JSON.stringify({
-            title: 'temp', // required field, PhoneGap Build replace it with title from config.xml
+            title: name,
             create_method: 'file',
             keys: keys
         }));
