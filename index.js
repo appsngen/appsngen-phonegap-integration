@@ -237,4 +237,21 @@
             }
         );
     };
+
+    exports.isApplicationExists = function (id, accessToken, callback) {
+        var url = BASE_URL + 'apps/' + id + '?access_token=' + accessToken;
+
+        request.get(url, function (error, response) {
+            if (error) {
+                callback(error);
+                return;
+            }
+
+            if (response.statusCode === 404) {
+                callback(null, false);
+            } else {
+                callback(null, true);
+            }
+        });
+    };
 })();
