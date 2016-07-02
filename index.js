@@ -11,7 +11,8 @@
     var BASE_URL = 'https://build.phonegap.com/api/v1/';
 
     var writeIntegrationFile = function (options, callback) {
-        var getIntegrationScript;
+        var integrationScript;
+        var originalTemplateSettings = _.templateSettings;
         var scriptTemplatePath = path.join(__dirname, '/templates/integration-template.txt');
         var packageScriptPath = path.join(options.projectPath, '/www/js/integration.js');
         var viewerEndpoint = options.serviceAddress + '/viewer';
@@ -28,13 +29,14 @@
                 return;
             }
 
-            getIntegrationScript = _.template(template);
-            fs.writeFile(packageScriptPath, getIntegrationScript({
+            integrationScript = _.template(template)({
                 widgetURL: widgetURL,
                 widgetUrn: options.urn,
                 widgetName: widgetName,
                 viewerEndpoint: viewerEndpoint
-            }), callback);
+            });
+            _.templateSettings = originalTemplateSettings;
+            fs.writeFile(packageScriptPath, integrationScript, callback);
         });
     };
 
