@@ -45,8 +45,8 @@
         'ios'
     ];
 
-    exports.getKeys = function (accessToken, callback) {
-        var url = BASE_URL + 'keys?access_token=' + accessToken;
+    exports.getKeys = function (platform, accessToken, callback) {
+        var url = BASE_URL + 'keys' + (platform ? '/' + platform : '') + '?access_token=' + accessToken;
 
         request.get(url, function (error, response) {
             if (error) {
