@@ -7,6 +7,7 @@
     var path = require('path');
     var archiver = require('archiver');
     var _ = require('underscore');
+    var WError = require('verror').WError;
 
     var BASE_URL = 'https://build.phonegap.com/api/v1/';
 
@@ -49,6 +50,8 @@
         var url = BASE_URL + 'keys' + (platform ? '/' + platform : '') + '?access_token=' + accessToken;
 
         request.get(url, function (error, response) {
+            var unexpectedResponseError;
+
             if (error) {
                 callback(error);
                 return;
@@ -57,7 +60,9 @@
             if (response.statusCode === 200) {
                 callback(null, JSON.parse(response.body).keys);
             } else {
-                callback(new Error('Unexpected response from build.phonegap.com.'));
+                unexpectedResponseError = new WError('Unexpected response from build.phonegap.com.');
+                unexpectedResponseError.code = response.statusCode;
+                callback(unexpectedResponseError);
             }
         });
     };
@@ -80,7 +85,7 @@
                     title: body.title
                 });
             } else {
-                requestError = new Error(body.error);
+                requestError = new WError(body.error);
                 requestError.code = response.statusCode;
                 callback(requestError);
             }
@@ -131,6 +136,8 @@
         url += '?access_token=' + accessToken;
 
         request.post(url, function (error, response) {
+            var unexpectedResponseError;
+
             if (error) {
                 callback(error);
                 return;
@@ -139,7 +146,10 @@
             if (response.statusCode === 202) {
                 callback();
             } else {
-                callback(new Error('Unable to start build. Unexpected response from build.phonegap.com.'));
+                unexpectedResponseError = new WError('Unable to start build. ' +
+                    'Unexpected response from build.phonegap.com.');
+                unexpectedResponseError.code = response.statusCode;
+                callback(unexpectedResponseError);
             }
         });
     };
@@ -159,38 +169,52 @@
                     case 200:
                         break;
                     case 401:
-                        responseError = new Error('Invalid PhoneGap Id');
+                        responseError = new WError('Invalid PhoneGap Id');
                         break;
                     case 404:
-                        responseError = new Error(body.error);
+                        responseError = new WError(body.error);
                         break;
                     default:
-                        responseError = new Error('Unexpected response from build.phonegap.com');
+                        responseError = new WError('Unexpected response from build.phonegap.com');
                         break;
                 }
+
+                if (responseError) {
+                    responseError.code = response.statusCode;
+                }
+
                 callback(responseError);
             })
             .form()
             .append('file', fs.createReadStream(packagePath));
     };
 
-    exports.getDownloadLink = function (appId, platform, accessToken, callback) {
+    exports.getDownloadLink = function (id, platform, accessToken, callback) {
         request.get({
-            url: BASE_URL + 'apps/' + appId + '/' + platform + '?access_token=' + accessToken,
+            url: BASE_URL + 'apps/' + id + '/' + platform + '?access_token=' + accessToken,
             followRedirect: false
         }, function (error, response) {
-            var body;
+            var requestError;
 
             if (error) {
                 callback(error);
                 return;
             }
 
-            body = JSON.parse(response.body);
-            if (response.statusCode === 302) {
-                callback(null, JSON.parse(response.body).location);
-            } else {
-                callback(new Error(body.error));
+            switch (response.statusCode) {
+                case 302:
+                    callback(null, JSON.parse(response.body).location);
+                    break;
+                case 404:
+                    requestError = new WError('Application with id: %d. Doesn\'t exists.', id);
+                    requestError.code = 404;
+                    callback(requestError);
+                    break;
+                default:
+                    requestError = new WError('Unexpected response from build.phonegap.com');
+                    requestError.code = 500;
+                    callback(requestError);
+                    break;
             }
         });
     };
@@ -244,15 +268,54 @@
         var url = BASE_URL + 'apps/' + id + '?access_token=' + accessToken;
 
         request.get(url, function (error, response) {
+            var unexpectedResponseError;
+
             if (error) {
                 callback(error);
                 return;
             }
 
-            if (response.statusCode === 404) {
-                callback(null, false);
-            } else {
-                callback(null, true);
+            switch (response.statusCode) {
+                case 200:
+                    callback(null, true);
+                    break;
+                case 404:
+                    callback(null, false);
+                    break;
+                default:
+                    unexpectedResponseError = new WError('Unexpected response from build.phonegap.com');
+                    unexpectedResponseError.code = 500;
+                    callback(unexpectedResponseError);
+                    break;
+            }
+        });
+    };
+
+    exports.getApplicationInformation = function (id, accessToken, callback) {
+        var url = BASE_URL + 'apps/' + id + '?access_token=' + accessToken;
+
+        request.get(url, function (error, response) {
+            var requestError;
+
+            if (error) {
+                callback(error);
+                return;
+            }
+
+            switch (response.statusCode) {
+                case 200:
+                    callback(null, JSON.parse(response.body));
+                    break;
+                case 404:
+                    requestError = new WError('Application with id: %d. Doesn\'t exists.', id);
+                    requestError.code = 404;
+                    callback(requestError);
+                    break;
+                default:
+                    requestError = new WError('Unexpected response from build.phonegap.com');
+                    requestError.code = 500;
+                    callback(requestError);
+                    break;
             }
         });
     };
