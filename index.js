@@ -397,4 +397,30 @@
         .form()
         .append('data', JSON.stringify(passwordObject));
     };
+
+    exports.isPhonegapTokenValid = function (accessToken, callback) {
+        var url = BASE_API_URL + 'me?access_token=' + accessToken;
+
+        request.get(url, function (error, response) {
+            var requestError;
+
+            if (error) {
+                callback(error);
+            }
+
+            switch (response.statusCode) {
+                case 200:
+                    callback(null, true);
+                    break;
+                case 401:
+                    callback(null, false);
+                    break;
+                default:
+                    requestError = new WError('Unexpected response from build.phonegap.com');
+                    requestError.code = 500;
+                    callback(requestError);
+                    break;
+            }
+        });
+    };
 })();
