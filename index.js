@@ -370,6 +370,7 @@
 
         request.put(url, function (error, response) {
             var requestError;
+            var body;
 
             if (error) {
                 callback(error);
@@ -378,6 +379,11 @@
 
             switch (response.statusCode) {
                 case 202:
+                    body = JSON.parse(response.body);
+                    if (body.locked) {
+                        requestError = new WError('Invalid request. Key still locked.');
+                        requestError.code = 400;
+                    }
                     break;
                 case 401:
                     requestError = new WError('Invalid token.');
@@ -406,6 +412,7 @@
 
             if (error) {
                 callback(error);
+                return;
             }
 
             switch (response.statusCode) {
