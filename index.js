@@ -15,8 +15,8 @@
     var writeIntegrationFile = function (options, callback) {
         var integrationScript;
         var originalTemplateSettings = _.templateSettings;
-        var scriptTemplatePath = path.join(__dirname, '/templates/integration-template.txt');
-        var packageScriptPath = path.join(options.projectPath, '/www/js/integration.js');
+        var scriptTemplatePath = path.join(__dirname, 'templates', 'integration-template.txt');
+        var packageScriptPath = path.join(options.packagePath, 'www', 'js', 'integration.js');
         var viewerEndpoint = options.serviceAddress + '/viewer';
         var widgetURL = options.serviceAddress + '/viewer/content/widgets/' + options.urn +
                         '/index.html?parent=file%3A%2F%2F&token=' + encodeURIComponent(options.token);
@@ -121,9 +121,9 @@
         form.append('file', fs.createReadStream(packagePath));
     };
 
-    exports.createPhonegapPackage = function (projectPath, name, callback) {
-        exec('npm run phonegap create "' + path.resolve(projectPath) + '" -- --name="' + name +
-            '" --template="' + path.join(__dirname, 'templates/phonegap-template') + '"', {
+    exports.createPhonegapPackage = function (packagePath, name, callback) {
+        exec('npm run phonegap create "' + path.resolve(packagePath) + '" -- --name="' + name +
+            '" --template="' + path.join(__dirname, 'templates', 'phonegap-template') + '"', {
             cwd: __dirname
         }, function (error, stdout, stderr) {
             callback(error, stdout, stderr);
@@ -186,8 +186,10 @@
         });
     };
 
-    exports.updatePhonegapApp = function (id, accessToken, packagePath, callback) {
-        request.put(BASE_API_URL + 'apps/' + id + '?access_token=' + accessToken,
+    exports.updatePhonegapApp = function (options, callback) {
+        var form;
+
+        form = request.put(BASE_API_URL + 'apps/' + options.applicationId + '?access_token=' + options.accessToken,
             function (error, response) {
                 var body, responseError;
 
@@ -205,7 +207,7 @@
                         responseError.code = 401;
                         break;
                     case 404:
-                        responseError = new WError('Application with id: %d. Doesn\'t exist.', id);
+                        responseError = new WError('Application with id: %d. Doesn\'t exist.', options.applicationId);
                         responseError.code = 404;
                         break;
                     default:
@@ -216,8 +218,11 @@
 
                 callback(responseError);
             })
-            .form()
-            .append('file', fs.createReadStream(packagePath));
+            .form();
+        form.append('file', fs.createReadStream(options.packagePath));
+        form.append('data', JSON.stringify({
+            keys: options.keysObject
+        }));
     };
 
     exports.getDownloadLink = function (id, platform, accessToken, callback) {
@@ -259,7 +264,7 @@
     //      urn,
     //      identityToken,
     //      serviceAddress,
-    //      projectPath
+    //      packagePath
     // optional fields:
     //      port
 
