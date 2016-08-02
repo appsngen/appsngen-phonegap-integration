@@ -1,6 +1,6 @@
 {
   "name": "appsngen-phonegap-integration",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -27,6 +27,8 @@
   "homepage": "https://github.com/appsngen/appsngen-phonegap-integration#readme",
   "dependencies": {
     "archiver": "1.0.0",
+    "async": "2.0.1",
+    "fs-extra": "0.30.0",
     "jscs": "3.0.4",
     "jshint": "2.9.2",
     "phonegap": "6.2.6",

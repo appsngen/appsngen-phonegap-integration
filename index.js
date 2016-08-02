@@ -1,8 +1,10 @@
 (function () {
     'use strict';
 
+    var async = require('async');
     var request = require('request');
     var fs = require('fs');
+    var fsExtra = require('fs-extra');
     var exec = require('child_process').exec;
     var path = require('path');
     var archiver = require('archiver');
@@ -433,6 +435,42 @@
                     callback(requestError);
                     break;
             }
+        });
+    };
+
+    exports.generateTemplate = function (options, callback) {
+        var that = this;
+
+        async.waterfall([
+            function setupEnvironment(next) {
+                fsExtra.mkdirs(options.packagePath, function (error) {
+                    next(error);
+                });
+            },
+            function createPhonegapPackage(next) {
+                var templatesPath = path.join(__dirname, 'templates', 'phonegap-template');
+
+                fsExtra.copy(templatesPath, options.packagePath, function (error) {
+                    next(error);
+                });
+            },
+            function prepareIntegrationFile(next) {
+                that.setIntegration({
+                    urn: options.urn,
+                    identityToken: options.identityToken,
+                    serviceAddress: options.serviceAddress,
+                    packagePath: options.packagePath
+                }, function (error) {
+                    next(error);
+                });
+            },
+            function generatePhonegapZipPackage(next) {
+                that.generatePhonegapZipPackage(options.packagePath, options.zipPath, function (error) {
+                    next(error);
+                });
+            }
+        ], function complete(error) {
+            callback(error);
         });
     };
 })();
