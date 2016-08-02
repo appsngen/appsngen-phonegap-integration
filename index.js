@@ -464,6 +464,24 @@
                     next(error);
                 });
             },
+            function setNameInXMLStep(next) {
+                // input: 'unr:app:org:example-widget-name'
+                // output: 'Example Widget Name'
+                var widgetName = options.urn.split(':').pop().split('-').map(function (word) {
+                    return word.charAt(0).toUpperCase() + word.substr(1);
+                }).join(' ');
+                var configPath = path.join(options.packagePath, 'config.xml');
+
+                fs.readFile(configPath, 'utf8', function (error, data) {
+                    if (error) {
+                        next(error);
+                    } else {
+                        data = data.replace('<name></name>', '<name>' + widgetName + '</name>');
+                        console.log('CONFIG PATH', typeof configPath, configPath);
+                        fs.writeFile(configPath, data, 'utf8', next);
+                    }
+                });
+            },
             function generatePhonegapZipPackage(next) {
                 that.generatePhonegapZipPackage(options.packagePath, options.zipPath, function (error) {
                     next(error);
