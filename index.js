@@ -477,7 +477,6 @@
                         next(error);
                     } else {
                         data = data.replace('<name></name>', '<name>' + widgetName + '</name>');
-                        console.log('CONFIG PATH', typeof configPath, configPath);
                         fs.writeFile(configPath, data, 'utf8', next);
                     }
                 });
