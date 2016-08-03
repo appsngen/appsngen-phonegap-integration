@@ -388,7 +388,7 @@
                 case 202:
                     body = JSON.parse(response.body);
                     if (body.locked) {
-                        requestError = new WError('Invalid request. Key still locked.');
+                        requestError = new WError('Wrong password(s). Key still locked.');
                         requestError.code = 400;
                     }
                     break;
