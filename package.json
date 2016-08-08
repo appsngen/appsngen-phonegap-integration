@@ -1,6 +1,6 @@
 {
   "name": "appsngen-phonegap-integration",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -31,7 +31,7 @@
     "fs-extra": "0.30.0",
     "jscs": "3.0.4",
     "jshint": "2.9.2",
-    "phonegap": "6.2.6",
+    "phonegap": "6.3.0",
     "request": "2.72.0",
     "underscore": "1.8.3",
     "verror": "1.6.1"
