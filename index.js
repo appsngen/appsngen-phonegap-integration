@@ -249,7 +249,8 @@
                     callback(requestError);
                     break;
                 case 404:
-                    requestError = new WError('Application with id: %d. Doesn\'t exist.', id);
+                    requestError = new WError('PhoneGap application with id: %d doesn\'t have mobile application' +
+                        ' for %s platform.', id, platform);
                     requestError.code = 404;
                     callback(requestError);
                     break;
@@ -357,6 +358,7 @@
                 case 401:
                     requestError = new WError('Invalid token.');
                     requestError.code = 401;
+                    callback(requestError);
                     break;
                 case 404:
                     requestError = new WError('Application with id: %d. Doesn\'t exist.', id);
