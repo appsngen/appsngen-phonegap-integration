@@ -20,7 +20,7 @@
         var scriptTemplatePath = path.join(__dirname, 'templates', 'integration-template.txt');
         var packageScriptPath = path.join(options.packagePath, 'www', 'js', 'integration.js');
         var viewerEndpoint = options.serviceAddress + '/viewer';
-        var widgetURL = options.serviceAddress + '/viewer/content/widgets/' + options.urn +
+        var widgetURL = options.serviceAddress + '/viewer/content/widgets/' + options.urn + '/' + options.version +
                         '/index.html?parent=file%3A%2F%2F&token=' + encodeURIComponent(options.token);
         var widgetName = options.urn.split(':').pop();
 
@@ -265,6 +265,7 @@
 
     // options argument required fields:
     //      urn,
+    //      version,
     //      identityToken,
     //      serviceAddress,
     //      packagePath
@@ -459,6 +460,7 @@
             function prepareIntegrationFile(next) {
                 that.setIntegration({
                     urn: options.urn,
+                    version: options.version,
                     identityToken: options.identityToken,
                     serviceAddress: options.serviceAddress,
                     packagePath: options.packagePath
@@ -478,7 +480,9 @@
                     if (error) {
                         next(error);
                     } else {
-                        data = data.replace('<name></name>', '<name>' + widgetName + '</name>');
+                        data = data
+                            .replace('<name></name>', '<name>' + widgetName + '</name>')
+                            .replace('version=""', 'version="' + options.version + '"');
                         fs.writeFile(configPath, data, 'utf8', next);
                     }
                 });
